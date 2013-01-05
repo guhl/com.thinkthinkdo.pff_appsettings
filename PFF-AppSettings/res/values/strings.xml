@@ -1,0 +1,9 @@
+<resources>
+
+    <string name="app_name">PFF-AppSettings</string>
+    <string name="title_permission_detail">Apps</string>
+    <string name="title_permission_list">PFF-AppSettings</string>
+    <string name="no_apps">No Apps</string>
+    <string name="spoof">Spoof</string>
+    
+</resources>

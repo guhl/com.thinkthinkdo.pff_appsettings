@@ -1,0 +1,3 @@
+<resources>
+    <item type="layout" name="activity_permission_list">@layout/activity_permission_twopane</item>
+</resources>
