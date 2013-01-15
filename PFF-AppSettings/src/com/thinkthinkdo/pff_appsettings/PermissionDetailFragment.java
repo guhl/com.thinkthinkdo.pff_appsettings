@@ -19,8 +19,12 @@ package com.thinkthinkdo.pff_appsettings;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import com.thinkthinkdo.pff_appsettings.R;
 import com.thinkthinkdo.pff_appsettings.content.PFFSettingsContent;
@@ -232,7 +236,7 @@ public class PermissionDetailFragment extends Fragment {
     
     private void displayApps(LinearLayout permListView, String permName) {
         List<PackageInfo> packs = mPm.getInstalledPackages(0);
-        Set<MyPermissionInfo> usedPerms = new HashSet<MyPermissionInfo>();
+        SortedMap<String,MyPermissionInfo> usedPerms = new TreeMap<String,MyPermissionInfo>();
         for(int i=0;i<packs.size();i++) {
             PackageInfo p = packs.get(i);
             PackageInfo pkgInfo;
@@ -253,14 +257,21 @@ public class PermissionDetailFragment extends Fragment {
             	if (tmpInfo.name.equalsIgnoreCase(permName)){
                     if (localLOGV) Log.w(TAG, "Adding package:"+p.packageName);
                     tmpInfo.packageName = p.packageName;
-            		usedPerms.add(tmpInfo);
+                    try {
+                	ApplicationInfo appInfo = mPm.getApplicationInfo(tmpInfo.packageName, PackageManager.GET_PERMISSIONS);
+            		usedPerms.put(appInfo.loadLabel(mPm).toString(),tmpInfo);
+                    } catch (NameNotFoundException e) {
+                        Log.w(TAG, "Couldn't retrieve permissions for package:"+tmpInfo.packageName);
+                        return;
+                    }
             	}
             }
         }
         permListView.removeAllViews();
         int j = 0;
         int spacing = (int)(8*mContext.getResources().getDisplayMetrics().density);
-        for(MyPermissionInfo tmpPerm : usedPerms){
+        for(Map.Entry<String,MyPermissionInfo> entry : usedPerms.entrySet()){
+    	    MyPermissionInfo tmpPerm = entry.getValue();
             if (localLOGV) Log.w(TAG, "usedPacks containd package:"+tmpPerm.packageName);
             View view = getAppItemView( mContext, mInflater, tmpPerm);
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(

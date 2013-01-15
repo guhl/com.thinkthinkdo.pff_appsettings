@@ -45,6 +45,8 @@ public class PFFSettingsContent {
 
     static {
         addItem(new PFFSettingsContentItem("1", "READ_PHONE_STATE"));
+        addItem(new PFFSettingsContentItem("2", "ACCESS_COARSE_LOCATION"));
+        addItem(new PFFSettingsContentItem("3", "ACCESS_FINE_LOCATION"));
     }
 
     private static void addItem(PFFSettingsContentItem item) {
