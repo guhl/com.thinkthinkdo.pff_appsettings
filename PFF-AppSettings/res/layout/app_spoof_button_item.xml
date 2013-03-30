@@ -1,0 +1,32 @@
+
+<!--
+  Defines the layout for the buttons.
+-->
+
+<view class="com.thinkthinkdo.pff_appsettings.PermissionDetailFragment$SpoofButtonView"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="?android:attr/selectableItemBackground">
+    <TextView
+	        android:id="@+id/app_spoof_all_text"
+	        android:textAppearance="?android:attr/textAppearanceSmall"
+	        android:textSize="16sp"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_gravity="top|left"
+	        android:layout_weight="1" />
+    <Button
+	        android:id="@+id/spoof_all_on_button"
+            android:layout_marginBottom="8dip"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="2" />
+    <Button
+	        android:id="@+id/spoof_all_off_button"
+            android:layout_marginBottom="8dip"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="2" />
+</view>

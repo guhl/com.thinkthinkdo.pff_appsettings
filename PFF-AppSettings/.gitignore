@@ -1,1 +1,4 @@
 .metadata
+/bin
+/lint.xml
+/project.properties

@@ -36,6 +36,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.CompoundButton;
@@ -57,7 +58,10 @@ public class PermissionDetailFragment extends Fragment {
     PackageManager mPm;
     private Context mContext;
     private LayoutInflater mInflater;
-
+    private SortedMap<String,MyPermissionInfo> mUsedPerms = new TreeMap<String,MyPermissionInfo>();
+    private LinearLayout mButtonList;
+    private LinearLayout mDisplayList;
+    
     static class MyPermissionInfo extends PermissionInfo {
         CharSequence mLabel;
 
@@ -92,16 +96,130 @@ public class PermissionDetailFragment extends Fragment {
         }
     }
 
+    public static class SpoofButtonView extends LinearLayout implements View.OnClickListener {
+        PackageManager mPm;
+        private final static boolean localLOGV = false;
+        private final static String TAG = "SpoofAllView";
+
+        private HashSet<String> mSpoofedPerms;
+        private MyOnClickListener mMyOnClickListener = new MyOnClickListener();
+
+        SortedMap<String,MyPermissionInfo> mUsedPerms = new TreeMap<String,MyPermissionInfo>();
+        String mPermName = new String();
+        Context mContext;
+
+        private class MyOnClickListener implements Button.OnClickListener {
+        	
+            @Override
+            public void onClick(View buttonView) {
+                final int id = buttonView.getId();
+                final String tag = (String) buttonView.getTag();
+                View rV = (View)getRootView();
+                LinearLayout permListView = (LinearLayout)rV.findViewById(R.id.apps_list);
+                for (int i = 0; i < permListView.getChildCount(); i++) {
+                	View v = permListView.getChildAt(i);
+                    Switch spoofSwitch = (Switch) v.findViewById(R.id.spoof_button);
+	               	final MyPermissionInfo tmpPerm = (MyPermissionInfo) spoofSwitch.getTag();
+            	    try {
+                        boolean switchable = true;
+            	    	if (tag.compareTo("NonSystem")==0){
+            	    		ApplicationInfo appInfo = mPm.getApplicationInfo(tmpPerm.packageName, PackageManager.GET_META_DATA);
+            	    		if ((appInfo.flags&ApplicationInfo.FLAG_SYSTEM) == 1)
+            	    			switchable = false;
+            	    	}
+            	    	if (switchable){
+		                	if (id == R.id.spoof_all_on_button)
+		                		spoofSwitch.setChecked(true);
+		                	if (id == R.id.spoof_all_off_button)
+		                		spoofSwitch.setChecked(false);
+            	    	}
+                    } catch (NameNotFoundException e) {
+                        Log.w(TAG, "pff: EditableChangeListener.onCheckedChanged Couldn't retrieve ApplicationInfo for package:"+tmpPerm.packageName);
+                    }
+            	    v.invalidate();
+                }
+                
+            }
+            
+        }
+        
+        public SpoofButtonView(Context context, AttributeSet attrs) {
+            super(context, attrs);
+            setClickable(true);
+            mPm = context.getPackageManager();
+            mContext = context;
+        }
+    	
+        @Override
+        public void onClick(View v) {
+        	
+        }
+    	
+        public void addAllEntry() {
+            TextView appNameView = (TextView) findViewById(R.id.app_spoof_all_text);
+            appNameView.setText("All (non system)");
+            Button onButton = (Button) findViewById(R.id.spoof_all_on_button);
+            Button offButton = (Button) findViewById(R.id.spoof_all_off_button);
+            onButton.setVisibility(View.VISIBLE);
+	        onButton.setTag("NonSystem");
+	        onButton.setOnClickListener(mMyOnClickListener);
+	        onButton.setText("On");
+            offButton.setVisibility(View.VISIBLE);
+	        offButton.setTag("NonSystem");
+	        offButton.setOnClickListener(mMyOnClickListener);
+	        offButton.setText("Off");
+        }
+        
+        public void setUsedPerms(SortedMap<String,MyPermissionInfo> usedPerms){
+        	mUsedPerms = usedPerms;
+        }
+        
+        public void setPermName(String permName){
+        	mPermName = permName;
+        }
+
+        private void spoofPerm(final MyPermissionInfo perm) {
+            Log.i(TAG, "spoofPerm: perm.name="+perm.name+" PackageName="+perm.packageName);
+            if (!mSpoofedPerms.contains(perm.name)) {
+            	mPm.setSpoofedPermissions(perm.packageName,
+                        addPermToList(mSpoofedPerms, perm));
+            }
+        }
+
+        private void unspoofPerm(final MyPermissionInfo perm) {
+            Log.i(TAG, "unspoofPerm: perm.name="+perm.name+" PackageName="+perm.packageName);
+            if (mSpoofedPerms.contains(perm.name)) {
+            	mPm.setSpoofedPermissions(perm.packageName,
+                        removePermFromList(mSpoofedPerms, perm));
+            }
+        }
+        
+        private String[] addPermToList(final HashSet<String> set, final MyPermissionInfo perm) {
+            set.add(perm.name);
+            final String[] rp = new String[set.size()];
+            set.toArray(rp);
+            return rp;
+        }
+
+        private String[] removePermFromList(final HashSet<String> set, final MyPermissionInfo perm) {
+            set.remove(perm.name);
+            final String[] rp = new String[set.size()];
+            set.toArray(rp);
+            return rp;
+        }
+        
+    }
+    
     public static class AppItemView extends LinearLayout implements View.OnClickListener {
 
         PackageManager mPm;
-        private final static boolean localLOGV = false;
+        private final static boolean localLOGV = true;
 
         private final static String TAG = "PermissionItemView";
 
         private HashSet<String> mSpoofedPerms;
         private HashSet<String> mSpoofablePerms;
-        
+                
         private EditableChangeListener mEditableChangeListener = new EditableChangeListener();
 
         private class EditableChangeListener implements CompoundButton.OnCheckedChangeListener{
@@ -111,33 +229,29 @@ public class PermissionDetailFragment extends Fragment {
             @Override
             public void onCheckedChanged (CompoundButton buttonView, boolean isChecked){
                 final int id = buttonView.getId();
-                final MyPermissionInfo perm = (MyPermissionInfo) buttonView.getTag(); 
-                Log.i(TAG, "pff onCheckedChanged got Tag: perm.name="+perm.name+" PackageName="+perm.packageName);
-                switch (id) {
-                case R.id.spoof_button:
-                	boolean on = ((android.widget.Switch) buttonView).isChecked();
+            	boolean on = ((android.widget.Switch) buttonView).isChecked();
+                if (id==R.id.spoof_button){
+	               	final MyPermissionInfo perm = (MyPermissionInfo) buttonView.getTag();
+	               	Log.i(TAG, "pff onCheckedChanged got Tag: perm.name="+perm.name+" PackageName="+perm.packageName);
                 	if (on)
                 		spoofPerm(perm);
                 	else
                 		unspoofPerm(perm);
-                    break;
-                }       	
+                }
             }
                     
             private void spoofPerm(final MyPermissionInfo perm) {
-                PackageManager pm = getContext().getPackageManager();
                 Log.i(TAG, "spoofPerm: perm.name="+perm.name+" PackageName="+perm.packageName);
                 if (!mSpoofedPerms.contains(perm.name)) {
-                	pm.setSpoofedPermissions(perm.packageName,
+                	mPm.setSpoofedPermissions(perm.packageName,
                             addPermToList(mSpoofedPerms, perm));
                 }
             }
 
             private void unspoofPerm(final MyPermissionInfo perm) {
-                PackageManager pm = getContext().getPackageManager();
                 Log.i(TAG, "unspoofPerm: perm.name="+perm.name+" PackageName="+perm.packageName);
                 if (mSpoofedPerms.contains(perm.name)) {
-                    pm.setSpoofedPermissions(perm.packageName,
+                	mPm.setSpoofedPermissions(perm.packageName,
                             removePermFromList(mSpoofedPerms, perm));
                 }
             }
@@ -225,13 +339,31 @@ public class PermissionDetailFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_permission_detail, container, false);
-        LinearLayout displayList = (LinearLayout) rootView.findViewById(R.id.apps_list);
+        mButtonList = (LinearLayout) rootView.findViewById(R.id.button_list);
+        mDisplayList = (LinearLayout) rootView.findViewById(R.id.apps_list);
         
+        return rootView;
+    }
+    
+    @Override
+    public void onResume(){
+    	super.onResume();
         if (mItem != null) {
         	String permName = "android.permission." + mItem.content;
-        	this.displayApps(displayList, permName);
+        	this.displayApps(mDisplayList, permName);
+        	this.displayButtons(mButtonList, permName);
         }
-        return rootView;
+    }
+    
+    private void displayButtons(LinearLayout buttonListView, String permName) {
+    	buttonListView.removeAllViews();
+        int spacing = (int)(8*mContext.getResources().getDisplayMetrics().density);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.topMargin = spacing * 2;
+        View view = getSpoofButtonView( mContext, mInflater, permName, mUsedPerms);
+        buttonListView.addView(view, lp);
     }
     
     private void displayApps(LinearLayout permListView, String permName) {
@@ -257,35 +389,45 @@ public class PermissionDetailFragment extends Fragment {
             	if (tmpInfo.name.equalsIgnoreCase(permName)){
                     if (localLOGV) Log.w(TAG, "Adding package:"+p.packageName);
                     tmpInfo.packageName = p.packageName;
-                    try {
-                	ApplicationInfo appInfo = mPm.getApplicationInfo(tmpInfo.packageName, PackageManager.GET_PERMISSIONS);
-            		usedPerms.put(appInfo.loadLabel(mPm).toString(),tmpInfo);
-                    } catch (NameNotFoundException e) {
-                        Log.w(TAG, "Couldn't retrieve permissions for package:"+tmpInfo.packageName);
-                        return;
-                    }
+           	    	usedPerms.put(tmpInfo.packageName,tmpInfo);
             	}
             }
         }
+        mUsedPerms = usedPerms;
         permListView.removeAllViews();
-        int j = 0;
+        /* add the All Entry                        */
         int spacing = (int)(8*mContext.getResources().getDisplayMetrics().density);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        int j = 0;
         for(Map.Entry<String,MyPermissionInfo> entry : usedPerms.entrySet()){
     	    MyPermissionInfo tmpPerm = entry.getValue();
-            if (localLOGV) Log.w(TAG, "usedPacks containd package:"+tmpPerm.packageName);
-            View view = getAppItemView( mContext, mInflater, tmpPerm);
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT);
-            if (j == 0) {
-                lp.topMargin = spacing;
-            }
-            if (permListView.getChildCount() == 0) {
-                lp.topMargin *= 2;
-            }
-            permListView.addView(view, lp);
-            j++;
+    	    if (tmpPerm.packageName.compareToIgnoreCase("com.thinkthinkdo.pff_appsettings")!=0){
+	            if (localLOGV) Log.w(TAG, "usedPacks containd package:"+tmpPerm.packageName);
+	            View view = getAppItemView( mContext, mInflater, tmpPerm);
+	            lp = new LinearLayout.LayoutParams(
+	                    ViewGroup.LayoutParams.MATCH_PARENT,
+	                    ViewGroup.LayoutParams.WRAP_CONTENT);
+	            if (j == 0) {
+	                lp.topMargin = spacing;
+	            }
+	            if (permListView.getChildCount() == 0) {
+	                lp.topMargin *= 2;
+	            }
+	            permListView.addView(view, lp);
+	            j++;
+    	    }
         }    	
+    }
+
+    private static SpoofButtonView getSpoofButtonView(Context context, LayoutInflater inflater, String permName,
+    		SortedMap<String,MyPermissionInfo> usedPerms) {
+    	SpoofButtonView spoofButtonView = (SpoofButtonView)inflater.inflate(R.layout.app_spoof_button_item, null);
+    	spoofButtonView.setUsedPerms(usedPerms);
+    	spoofButtonView.setPermName(permName);
+    	spoofButtonView.addAllEntry();
+        return spoofButtonView;
     }
 
     private static AppItemView getAppItemView(Context context, LayoutInflater inflater, MyPermissionInfo perm) {

@@ -4,5 +4,6 @@
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="lib" path="/opt/android-sdk-update-manager/platforms/android-4.2.1/android.jar"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
+	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
