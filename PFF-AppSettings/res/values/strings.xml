@@ -5,5 +5,9 @@
     <string name="title_permission_list">PFF-AppSettings</string>
     <string name="no_apps">No Apps</string>
     <string name="spoof">Spoof</string>
+    <string name="button_on">On</string>
+    <string name="button_off">Off</string>
+    <string name="textviev_all_system">All system apps</string>
+    <string name="textviev_all_non_system">All non-system apps</string>
     
 </resources>

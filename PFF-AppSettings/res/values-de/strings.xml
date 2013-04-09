@@ -1,0 +1,13 @@
+<resources>
+
+    <string name="app_name">PFF-AppSettings</string>
+    <string name="title_permission_detail">Apps</string>
+    <string name="title_permission_list">PFF-AppSettings</string>
+    <string name="no_apps">Keine Apps</string>
+    <string name="spoof">Spoof</string>
+    <string name="button_on">An</string>
+    <string name="button_off">Aus</string>
+    <string name="textviev_all_system">Alle System Apps</string>
+    <string name="textviev_all_non_system">Alle Nicht-System Apps</string>
+    
+</resources>

@@ -49,7 +49,7 @@ public class PFFSettingsContent {
         addItem(new PFFSettingsContentItem("3", "ACCESS_FINE_LOCATION"));
         addItem(new PFFSettingsContentItem("4", "READ_CONTACTS"));
         addItem(new PFFSettingsContentItem("5", "READ_CALL_LOG"));
-        addItem(new PFFSettingsContentItem("5", "READ_CALENDAR"));
+        addItem(new PFFSettingsContentItem("6", "READ_CALENDAR"));
     }
 
     private static void addItem(PFFSettingsContentItem item) {

@@ -121,12 +121,12 @@ public class PermissionDetailFragment extends Fragment {
                     Switch spoofSwitch = (Switch) v.findViewById(R.id.spoof_button);
 	               	final MyPermissionInfo tmpPerm = (MyPermissionInfo) spoofSwitch.getTag();
             	    try {
-                        boolean switchable = true;
-            	    	if (tag.compareTo("NonSystem")==0){
-            	    		ApplicationInfo appInfo = mPm.getApplicationInfo(tmpPerm.packageName, PackageManager.GET_META_DATA);
-            	    		if ((appInfo.flags&ApplicationInfo.FLAG_SYSTEM) == 1)
-            	    			switchable = false;
-            	    	}
+                        boolean switchable = false;
+           	    		ApplicationInfo appInfo = mPm.getApplicationInfo(tmpPerm.packageName, PackageManager.GET_META_DATA);
+           	    		if ((appInfo.flags&ApplicationInfo.FLAG_SYSTEM)!=1 && tag.compareTo("NonSystem")==0 )
+           	    			switchable = true;
+           	    		if ((appInfo.flags&ApplicationInfo.FLAG_SYSTEM)==1 && tag.compareTo("System")==0 )
+           	    			switchable = true;           	    		
             	    	if (switchable){
 		                	if (id == R.id.spoof_all_on_button)
 		                		spoofSwitch.setChecked(true);
@@ -157,17 +157,32 @@ public class PermissionDetailFragment extends Fragment {
     	
         public void addAllEntry() {
             TextView appNameView = (TextView) findViewById(R.id.app_spoof_all_text);
-            appNameView.setText("All (non system)");
+            appNameView.setText(R.string.textviev_all_non_system);
             Button onButton = (Button) findViewById(R.id.spoof_all_on_button);
             Button offButton = (Button) findViewById(R.id.spoof_all_off_button);
-            onButton.setVisibility(View.VISIBLE);
-	        onButton.setTag("NonSystem");
-	        onButton.setOnClickListener(mMyOnClickListener);
-	        onButton.setText("On");
             offButton.setVisibility(View.VISIBLE);
 	        offButton.setTag("NonSystem");
 	        offButton.setOnClickListener(mMyOnClickListener);
-	        offButton.setText("Off");
+	        offButton.setText(R.string.button_off);
+            onButton.setVisibility(View.VISIBLE);
+	        onButton.setTag("NonSystem");
+	        onButton.setOnClickListener(mMyOnClickListener);
+	        onButton.setText(R.string.button_on);
+        }
+        
+        public void addAllSystemEntry() {
+            TextView appNameView = (TextView) findViewById(R.id.app_spoof_all_text);
+            appNameView.setText(R.string.textviev_all_system);
+            Button onButton = (Button) findViewById(R.id.spoof_all_on_button);
+            Button offButton = (Button) findViewById(R.id.spoof_all_off_button);
+            offButton.setVisibility(View.VISIBLE);
+	        offButton.setTag("System");
+	        offButton.setOnClickListener(mMyOnClickListener);
+	        offButton.setText(R.string.button_off);
+            onButton.setVisibility(View.VISIBLE);
+	        onButton.setTag("System");
+	        onButton.setOnClickListener(mMyOnClickListener);
+	        onButton.setText(R.string.button_on);
         }
         
         public void setUsedPerms(SortedMap<String,MyPermissionInfo> usedPerms){
@@ -177,37 +192,7 @@ public class PermissionDetailFragment extends Fragment {
         public void setPermName(String permName){
         	mPermName = permName;
         }
-
-        private void spoofPerm(final MyPermissionInfo perm) {
-            Log.i(TAG, "spoofPerm: perm.name="+perm.name+" PackageName="+perm.packageName);
-            if (!mSpoofedPerms.contains(perm.name)) {
-            	mPm.setSpoofedPermissions(perm.packageName,
-                        addPermToList(mSpoofedPerms, perm));
-            }
-        }
-
-        private void unspoofPerm(final MyPermissionInfo perm) {
-            Log.i(TAG, "unspoofPerm: perm.name="+perm.name+" PackageName="+perm.packageName);
-            if (mSpoofedPerms.contains(perm.name)) {
-            	mPm.setSpoofedPermissions(perm.packageName,
-                        removePermFromList(mSpoofedPerms, perm));
-            }
-        }
-        
-        private String[] addPermToList(final HashSet<String> set, final MyPermissionInfo perm) {
-            set.add(perm.name);
-            final String[] rp = new String[set.size()];
-            set.toArray(rp);
-            return rp;
-        }
-
-        private String[] removePermFromList(final HashSet<String> set, final MyPermissionInfo perm) {
-            set.remove(perm.name);
-            final String[] rp = new String[set.size()];
-            set.toArray(rp);
-            return rp;
-        }
-        
+       
     }
     
     public static class AppItemView extends LinearLayout implements View.OnClickListener {
@@ -362,7 +347,10 @@ public class PermissionDetailFragment extends Fragment {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
         lp.topMargin = spacing * 2;
-        View view = getSpoofButtonView( mContext, mInflater, permName, mUsedPerms);
+        View view = getSpoofButtonView( mContext, mInflater, permName, mUsedPerms, true);     
+        buttonListView.addView(view, lp);
+        view = getSpoofButtonView( mContext, mInflater, permName, mUsedPerms, false);     
+        lp.topMargin = spacing / 2;
         buttonListView.addView(view, lp);
     }
     
@@ -422,11 +410,14 @@ public class PermissionDetailFragment extends Fragment {
     }
 
     private static SpoofButtonView getSpoofButtonView(Context context, LayoutInflater inflater, String permName,
-    		SortedMap<String,MyPermissionInfo> usedPerms) {
+    		SortedMap<String,MyPermissionInfo> usedPerms, boolean system) {
     	SpoofButtonView spoofButtonView = (SpoofButtonView)inflater.inflate(R.layout.app_spoof_button_item, null);
     	spoofButtonView.setUsedPerms(usedPerms);
     	spoofButtonView.setPermName(permName);
-    	spoofButtonView.addAllEntry();
+    	if (!system)
+    		spoofButtonView.addAllEntry();
+    	else
+    		spoofButtonView.addAllSystemEntry();
         return spoofButtonView;
     }
 
