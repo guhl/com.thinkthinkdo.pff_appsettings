@@ -1,0 +1,4 @@
+<h3>PFF-AppSettings</h3>
+
+Version 1.1<br>
+Copyright 2013 - Guhl<br>

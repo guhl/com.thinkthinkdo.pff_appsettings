@@ -18,17 +18,20 @@
 package com.thinkthinkdo.pff_appsettings;
 
 import com.thinkthinkdo.pff_appsettings.R;
+import com.thinkthinkdo.pff_appsettings.AboutDialog;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
+import android.view.Menu;
 import android.view.MenuItem;
 
 public class PermissionListActivity extends FragmentActivity
         implements PermissionListFragment.Callbacks {
 
     private boolean mTwoPane;
+	final public int ABOUT = 0;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -42,6 +45,23 @@ public class PermissionListActivity extends FragmentActivity
                     .setActivateOnItemClick(true);
         }
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+    	menu.add(0,ABOUT,0,"About");
+    	return true;
+    }   
+    
+    public boolean onOptionsItemSelected (MenuItem item){
+    	switch (item.getItemId()) {
+    		case ABOUT:
+	    	AboutDialog about = new AboutDialog(this);
+	    	about.setTitle(R.string.about_title);
+	    	about.show();
+	    	break;
+    	}
+    	return true;
+    }    
 
     @Override
     public void onItemSelected(String id) {

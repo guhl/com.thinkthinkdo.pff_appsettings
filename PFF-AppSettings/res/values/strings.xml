@@ -9,5 +9,7 @@
     <string name="button_off">Off</string>
     <string name="textviev_all_system">All system apps</string>
     <string name="textviev_all_non_system">All non-system apps</string>
+
+	<string name="about_title">About this App</string>
     
 </resources>

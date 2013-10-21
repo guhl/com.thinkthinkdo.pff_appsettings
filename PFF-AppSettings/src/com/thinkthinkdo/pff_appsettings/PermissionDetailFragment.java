@@ -17,6 +17,8 @@
 
 package com.thinkthinkdo.pff_appsettings;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -228,16 +230,36 @@ public class PermissionDetailFragment extends Fragment {
             private void spoofPerm(final MyPermissionInfo perm) {
                 Log.i(TAG, "spoofPerm: perm.name="+perm.name+" PackageName="+perm.packageName);
                 if (!mSpoofedPerms.contains(perm.name)) {
-                	mPm.setSpoofedPermissions(perm.packageName,
-                            addPermToList(mSpoofedPerms, perm));
+                    String setSpoofedPermissionsMethodName = "setSpoofedPermissions";
+                    try {
+                    	Method setSpoofedPermissionsMethod = mPm.getClass().getMethod(setSpoofedPermissionsMethodName, String.class, String[].class);
+                    	setSpoofedPermissionsMethod.invoke(mPm, perm.packageName,addPermToList(mSpoofedPerms, perm));
+                    } catch (NoSuchMethodException e) {
+                        e.printStackTrace();
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    } catch (InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
+//                	mPm.setSpoofedPermissions(perm.packageName,addPermToList(mSpoofedPerms, perm));
                 }
             }
 
             private void unspoofPerm(final MyPermissionInfo perm) {
                 Log.i(TAG, "unspoofPerm: perm.name="+perm.name+" PackageName="+perm.packageName);
                 if (mSpoofedPerms.contains(perm.name)) {
-                	mPm.setSpoofedPermissions(perm.packageName,
-                            removePermFromList(mSpoofedPerms, perm));
+                    String setSpoofedPermissionsMethodName = "setSpoofedPermissions";
+                    try {
+                    	Method setSpoofedPermissionsMethod = mPm.getClass().getMethod(setSpoofedPermissionsMethodName, String.class, String[].class);
+                    	setSpoofedPermissionsMethod.invoke(mPm, perm.packageName,removePermFromList(mSpoofedPerms, perm));
+                    } catch (NoSuchMethodException e) {
+                        e.printStackTrace();
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    } catch (InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
+//                	mPm.setSpoofedPermissions(perm.packageName,removePermFromList(mSpoofedPerms, perm));
                 }
             }
             
@@ -271,8 +293,20 @@ public class PermissionDetailFragment extends Fragment {
         public void setApp(MyPermissionInfo perm) {
 
             mSpoofedPerms = new HashSet<String>();
-        	String[] spoofed = mPm.getSpoofedPermissions(perm.packageName);
-            mSpoofedPerms.addAll(Arrays.asList(spoofed));
+            String getSpoofedPermissionsMethodName = "getSpoofedPermissions";
+            String[] spoofed;
+            try {
+            	Method getSpoofedPermissionsMethod = mPm.getClass().getMethod(getSpoofedPermissionsMethodName, String.class);
+            	spoofed = (String[]) getSpoofedPermissionsMethod.invoke(mPm, perm.packageName);
+                mSpoofedPerms.addAll(Arrays.asList(spoofed));
+//              String[] spoofed = mPm.getSpoofedPermissions(perm.packageName);
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
         	
             if (localLOGV) Log.i(TAG, "pff: AppItemView.setApp packageName="+perm.packageName);
 
